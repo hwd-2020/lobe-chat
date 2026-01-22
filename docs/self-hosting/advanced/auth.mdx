@@ -1,8 +1,9 @@
 ---
-title: LobeChat Authentication Service Configuration
+title: LobeHub Authentication Service Configuration
 description: >-
-  Learn how to configure external authentication services using Better Auth, Clerk, or Next Auth for centralized user authorization management. Supported authentication services include Auth0, Azure ID, etc.
-
+  Learn how to configure external authentication services using Better Auth,
+  Clerk, or Next Auth for centralized user authorization management. Supported
+  authentication services include Auth0, Azure ID, etc.
 tags:
   - Authentication Service
   - Better Auth
@@ -13,15 +14,15 @@ tags:
 
 # Authentication Service
 
-LobeChat supports the configuration of external authentication services using Better Auth, Clerk, or Next Auth for internal use within enterprises/organizations to centrally manage user authorization.
+LobeHub supports the configuration of external authentication services using Better Auth, Clerk, or Next Auth for internal use within enterprises/organizations to centrally manage user authorization.
 
 ## Clerk
 
 Clerk is a comprehensive identity verification solution that has recently gained popularity. It provides a simple yet powerful API and services to handle user authentication and session management. Clerk's design philosophy is to offer a concise and modern authentication solution that enables developers to easily integrate and use it.
 
-LobeChat has deeply integrated with Clerk to provide users with a more secure and convenient login and registration experience. It also relieves developers from the burden of managing authentication logic. Clerk's concise and modern design philosophy aligns perfectly with LobeChat's goals, making user management on the entire platform more efficient and reliable.
+LobeHub has deeply integrated with Clerk to provide users with a more secure and convenient login and registration experience. It also relieves developers from the burden of managing authentication logic. Clerk's concise and modern design philosophy aligns perfectly with LobeHub's goals, making user management on the entire platform more efficient and reliable.
 
-By setting the environment variables `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in LobeChat's environment, you can enable and use Clerk.
+By setting the environment variables `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in LobeHub's environment, you can enable and use Clerk.
 
 ## Better Auth
 
@@ -37,14 +38,14 @@ By setting the environment variables `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CL
 
 ### Getting Started
 
-To enable Better Auth in LobeChat, set the following environment variables:
+To enable Better Auth in LobeHub, set the following environment variables:
 
-| Environment Variable             | Type     | Description                                                                                                                                                                |
-| -------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_ENABLE_BETTER_AUTH` | Required | Set to `1` to enable Better Auth service                                                                                                                                   |
-| `AUTH_SECRET`                    | Required | Key used to encrypt session tokens. Generate using: `openssl rand -base64 32`                                                                                              |
-| `NEXT_PUBLIC_AUTH_URL`           | Required | The browser-accessible base URL for Better Auth (e.g., `http://localhost:3010`, `https://lobechat.com`). Optional for Vercel deployments (auto-detected from `VERCEL_URL`) |
-| `AUTH_SSO_PROVIDERS`             | Optional | Comma-separated list of enabled SSO providers, e.g., `google,github,microsoft`                                                                                             |
+| Environment Variable             | Type     | Description                                                                                                                                                               |
+| -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_ENABLE_BETTER_AUTH` | Required | Set to `1` to enable Better Auth service                                                                                                                                  |
+| `AUTH_SECRET`                    | Required | Key used to encrypt session tokens. Generate using: `openssl rand -base64 32`                                                                                             |
+| `NEXT_PUBLIC_AUTH_URL`           | Required | The browser-accessible base URL for Better Auth (e.g., `http://localhost:3010`, `https://LobeHub.com`). Optional for Vercel deployments (auto-detected from `VERCEL_URL`) |
+| `AUTH_SSO_PROVIDERS`             | Optional | Comma-separated list of enabled SSO providers, e.g., `google,github,microsoft`                                                                                            |
 
 <Callout type={'error'}>
   **Important**: Better Auth is currently only suitable for **fresh deployments**. If you are already using NextAuth or Clerk and have existing user data in your database, **do not switch to Better Auth yet**, otherwise existing users will not be able to log in.
@@ -121,7 +122,7 @@ Enable BetterAuth magic-link login (depends on a working email provider above):
 
 ## Next Auth
 
-Before using NextAuth, please set the following variables in LobeChat's environment variables:
+Before using NextAuth, please set the following variables in LobeHub's environment variables:
 
 | Environment Variable             | Type     | Description                                                                                                                                                                                                                                |
 | -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -184,7 +185,7 @@ The order corresponds to the display order of the SSO providers.
 
 ### Webhook Support
 
-Allow LobeChat to receive notifications when user information is updated in the identity provider. Supported providers include Casdoor and Logto. Please refer to the specific provider documentation for configuration details.
+Allow LobeHub to receive notifications when user information is updated in the identity provider. Supported providers include Casdoor and Logto. Please refer to the specific provider documentation for configuration details.
 
 ### Database Session
 
