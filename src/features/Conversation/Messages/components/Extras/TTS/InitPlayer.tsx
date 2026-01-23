@@ -1,6 +1,6 @@
 import { getMessageError } from '@lobechat/fetch-sse';
 import { type ChatMessageError, type ChatTTS } from '@lobechat/types';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useTTS } from '@/hooks/useTTS';
@@ -18,6 +18,8 @@ export interface TTSProps extends ChatTTS {
 const InitPlayer = memo<TTSProps>(({ id, content, contentMd5, file }) => {
   const [isStart, setIsStart] = useState(false);
   const [error, setError] = useState<ChatMessageError>();
+  // Track if TTS has been deleted to prevent onUpload from re-creating it
+  const isDeletedRef = useRef(false);
   const uploadTTS = useFileStore((s) => s.uploadTTSByArrayBuffers);
   const { t } = useTranslation('chat');
 
@@ -50,7 +52,11 @@ const InitPlayer = memo<TTSProps>(({ id, content, contentMd5, file }) => {
       stop();
     },
     onUpload: async (currentVoice, arrayBuffers) => {
+      // Don't upload if TTS has been deleted
+      if (isDeletedRef.current) return;
       const fileID = await uploadTTS(id, arrayBuffers);
+      // Double check before saving - user might have deleted during upload
+      if (isDeletedRef.current) return;
       ttsMessage(id, { contentMd5, file: fileID, voice: currentVoice });
     },
   });
@@ -62,6 +68,8 @@ const InitPlayer = memo<TTSProps>(({ id, content, contentMd5, file }) => {
   }, [isStart, start]);
 
   const handleDelete = useCallback(() => {
+    // Mark as deleted to prevent onUpload from re-creating TTS
+    isDeletedRef.current = true;
     stop();
     clearTTS(id);
   }, [stop, id, clearTTS]);
@@ -73,10 +81,12 @@ const InitPlayer = memo<TTSProps>(({ id, content, contentMd5, file }) => {
 
   useEffect(() => {
     if (file) return;
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       handleInitStart();
     }, 100);
-  }, [file]);
+    // Cleanup timeout on unmount to prevent stale callbacks
+    return () => clearTimeout(timer);
+  }, [file, handleInitStart]);
 
   return (
     <Player

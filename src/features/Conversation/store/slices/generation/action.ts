@@ -1,6 +1,7 @@
-import type { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand/vanilla';
 
 import { MESSAGE_CANCEL_FLAT } from '@/const/index';
+import { mutate } from '@/libs/swr';
 import { useChatStore } from '@/store/chat';
 import { AI_RUNTIME_OPERATION_TYPES } from '@/store/chat/slices/operation/types';
 
@@ -126,13 +127,90 @@ export const generationSlice: StateCreator<
   },
 
   clearTTS: async (messageId: string) => {
+    const { context, dbMessages } = get();
     const chatStore = useChatStore.getState();
-    await chatStore.clearTTS(messageId);
+
+    // Build optimistic data with TTS removed
+    const optimisticData = dbMessages.map((msg) =>
+      msg.id === messageId ? { ...msg, extra: { ...msg.extra, tts: undefined } } : msg,
+    );
+
+    // Dispatch locally first for immediate UI update
+    get().internal_dispatchMessage({
+      id: messageId,
+      key: 'tts',
+      type: 'updateMessageExtra',
+      value: undefined,
+    });
+
+    // Update SWR caches immediately (before async operations) to prevent race conditions
+    // This ensures StoreUpdater won't overwrite our local dispatch with stale cached data
+    await Promise.all([
+      mutate(
+        (key) =>
+          Array.isArray(key) &&
+          key[0] === 'CONVERSATION_FETCH_MESSAGES' &&
+          key[1]?.agentId === context.agentId &&
+          key[1]?.topicId === context.topicId,
+        optimisticData,
+        { revalidate: false },
+      ),
+      mutate(
+        (key) =>
+          Array.isArray(key) &&
+          key[0] === 'CHAT_STORE_FETCH_MESSAGES' &&
+          key[1]?.agentId === context.agentId &&
+          key[1]?.topicId === context.topicId,
+        optimisticData,
+        { revalidate: false },
+      ),
+    ]);
+
+    // Update database (fire and forget - no need to await for UI responsiveness)
+    chatStore.clearTTS(messageId);
   },
 
   clearTranslate: async (messageId: string) => {
+    const { context, dbMessages } = get();
     const chatStore = useChatStore.getState();
-    await chatStore.clearTranslate(messageId);
+
+    // Build optimistic data with translate removed
+    const optimisticData = dbMessages.map((msg) =>
+      msg.id === messageId ? { ...msg, extra: { ...msg.extra, translate: undefined } } : msg,
+    );
+
+    // Dispatch locally first for immediate UI update
+    get().internal_dispatchMessage({
+      id: messageId,
+      key: 'translate',
+      type: 'updateMessageExtra',
+      value: undefined,
+    });
+
+    // Update SWR caches immediately (before async operations) to prevent race conditions
+    await Promise.all([
+      mutate(
+        (key) =>
+          Array.isArray(key) &&
+          key[0] === 'CONVERSATION_FETCH_MESSAGES' &&
+          key[1]?.agentId === context.agentId &&
+          key[1]?.topicId === context.topicId,
+        optimisticData,
+        { revalidate: false },
+      ),
+      mutate(
+        (key) =>
+          Array.isArray(key) &&
+          key[0] === 'CHAT_STORE_FETCH_MESSAGES' &&
+          key[1]?.agentId === context.agentId &&
+          key[1]?.topicId === context.topicId,
+        optimisticData,
+        { revalidate: false },
+      ),
+    ]);
+
+    // Update database (fire and forget - no need to await for UI responsiveness)
+    chatStore.clearTranslate(messageId);
   },
 
   continueGeneration: async (groupMessageId: string) => {
@@ -357,6 +435,16 @@ export const generationSlice: StateCreator<
 
   translateMessage: async (messageId: string, targetLang: string) => {
     const chatStore = useChatStore.getState();
+
+    // Initialize translate extra - dispatch locally first for immediate UI feedback
+    // Then ChatStore will handle database update and streaming
+    get().internal_dispatchMessage({
+      id: messageId,
+      key: 'translate',
+      type: 'updateMessageExtra',
+      value: { content: '', from: '', to: targetLang },
+    });
+
     await chatStore.translateMessage(messageId, targetLang);
   },
 
@@ -365,6 +453,16 @@ export const generationSlice: StateCreator<
     state?: { contentMd5?: string; file?: string; voice?: string },
   ) => {
     const chatStore = useChatStore.getState();
+
+    // Initialize tts extra - dispatch locally first for immediate UI feedback
+    // Then ChatStore will handle database update
+    get().internal_dispatchMessage({
+      id: messageId,
+      key: 'tts',
+      type: 'updateMessageExtra',
+      value: state ?? {},
+    });
+
     await chatStore.ttsMessage(messageId, state);
   },
 });

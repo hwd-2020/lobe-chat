@@ -116,6 +116,13 @@ export const chatTranslate: StateCreator<
   updateMessageTranslate: async (id, data) => {
     await messageService.updateMessageTranslate(id, data);
 
-    await get().refreshMessages();
+    // Use internal_dispatchMessage to update local state
+    // This ensures the UI updates immediately since refreshMessages has SWR key mismatch issues
+    get().internal_dispatchMessage({
+      id,
+      key: 'translate',
+      type: 'updateMessageExtra',
+      value: data === false ? undefined : data,
+    });
   },
 });

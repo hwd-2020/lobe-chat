@@ -30,6 +30,14 @@ export const chatTTS: StateCreator<ChatStore, [['zustand/devtools', never]], [],
 
   updateMessageTTS: async (id, data) => {
     await messageService.updateMessageTTS(id, data);
-    await get().refreshMessages();
+
+    // Use internal_dispatchMessage to update local state
+    // This ensures the UI updates immediately since refreshMessages has SWR key mismatch issues
+    get().internal_dispatchMessage({
+      id,
+      key: 'tts',
+      type: 'updateMessageExtra',
+      value: data === false ? undefined : data,
+    });
   },
 });
