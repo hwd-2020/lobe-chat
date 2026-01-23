@@ -89,9 +89,11 @@ export const useUserActions = ({ id, data }: UseUserActionsParams): UserActions 
       },
       translate: {
         children: localeOptions.map((i) => ({
-          handleClick: () => translateMessage(id, i.value),
           key: i.value,
           label: t(`lang.${i.value}`),
+          // Use onClick directly because @lobehub/ui DropdownMenu doesn't propagate
+          // onActionClick for submenu children, only for top-level menu items
+          onClick: () => translateMessage(id, i.value),
         })),
         icon: LanguagesIcon,
         key: 'translate',
