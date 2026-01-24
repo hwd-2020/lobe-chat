@@ -117,6 +117,30 @@ export const { POST } = serve<MemoryExtractionPayloadInput>(
             processedTopics: payload.topicIds.length,
           });
 
+          // Trigger user story update after topic processing using the same baseUrl.
+          if (payload.baseUrl && payload.userIds.length > 0) {
+            // TODO(@nekomeowww): Should use triggerXXX pattern
+            const storyUrl = new URL(
+              '/api/workflows/user-story/process',
+              payload.baseUrl,
+            ).toString();
+            await context.run('memory:user-story:update', async () => {
+              const res = await fetch(storyUrl, {
+                body: JSON.stringify({ userIds: payload.userIds }),
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...upstashWorkflowExtraHeaders,
+                },
+                method: 'POST',
+              });
+
+              if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`User story workflow trigger failed: ${res.status} ${text}`);
+              }
+            });
+          }
+
           span.setStatus({ code: SpanStatusCode.OK });
 
           return {

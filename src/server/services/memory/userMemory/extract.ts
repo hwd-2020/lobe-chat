@@ -1153,7 +1153,7 @@ export class MemoryExtractionExecutor {
             topic: topic,
             topicId: topic.id,
           });
-          const topicContext = await topicContextProvider.buildContext(extractionJob);
+          const topicContext = await topicContextProvider.buildContext(extractionJob.userId);
 
           resultRecorder = new LobeChatTopicResultRecorder({
             currentMetadata: topic.metadata || {},
@@ -1175,8 +1175,10 @@ export class MemoryExtractionExecutor {
           const retrievedMemoryContextProvider = new RetrievalUserMemoryContextProvider({
             retrievedMemories,
           });
-          const retrievalMemoryContext =
-            await retrievedMemoryContextProvider.buildContext(extractionJob);
+          const retrievalMemoryContext = await retrievedMemoryContextProvider.buildContext(
+            extractionJob.userId,
+            extractionJob.sourceId,
+          );
 
           const retrievedMemoryIdentities = await this.listUserMemoryIdentities(
             extractionJob,
@@ -1187,7 +1189,10 @@ export class MemoryExtractionExecutor {
               retrievedIdentities: retrievedMemoryIdentities,
             });
           const retrievedIdentityContext =
-            await retrievedMemoryIdentitiesContextProvider.buildContext(extractionJob);
+            await retrievedMemoryIdentitiesContextProvider.buildContext(
+              extractionJob.userId,
+              extractionJob.sourceId,
+            );
           const trimmedRetrievedContexts = [
             topicContext.context,
             retrievalMemoryContext.context,
@@ -1730,7 +1735,9 @@ export class MemoryExtractionExecutor {
     }
 
     if (errors.length) {
-      const detail = errors.map((error) => `${error.message}${error.cause ? `: ${error.cause}` : ''}`).join('; ');
+      const detail = errors
+        .map((error) => `${error.message}${error.cause ? `: ${error.cause}` : ''}`)
+        .join('; ');
       throw new AggregateError(errors, `Memory extraction encountered layer errors: ${detail}`);
     }
 
@@ -1937,7 +1944,7 @@ export class MemoryExtractionExecutor {
             userId: params.userId,
           };
 
-          const builtContext = await contextProvider.buildContext(extractionJob);
+          const builtContext = await contextProvider.buildContext(extractionJob.userId);
           const extractorContextLimit = this.privateConfig.agentLayerExtractor.contextLimit;
           const trimmedContext = this.trimTextToTokenLimit(
             builtContext.context,

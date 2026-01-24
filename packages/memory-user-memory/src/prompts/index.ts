@@ -6,3 +6,4 @@ export {
   identityPrompt,
   preferencePrompt,
 } from './layers';
+export { userStoryPrompt } from './story';
